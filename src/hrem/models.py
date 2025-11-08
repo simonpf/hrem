@@ -464,6 +464,7 @@ class HeatingRateUNet3dSimple(nn.Module):
 
         return MeanTensor(output)
 
+
 class HeatingRateUNet3d(nn.Module):
     """
     3D ResNeXt network for predicting vertical profiles of heating rates.
@@ -619,11 +620,7 @@ class HeatingRateUNet3d(nn.Module):
 
         return output
 
-HeatingRateUNet3D = HeatingRateUNet3d
-
 __all__ = [
-    "RTEmulatorBase",
+    "HeatingRateUNet3dSimple",
     "HeatingRateUNet3d",
-    "HeatingRateUNet3d2",
-    "HeatingRateUNet3d3",
 ]

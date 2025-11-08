@@ -1,7 +1,7 @@
 """
 Helper functions for evaluting radiative transfer emulators.
 """
-from typing import List
+from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -168,3 +168,67 @@ def plot_stats_and_hist(
 
     plt.tight_layout()
     return fig
+import torch
+import matplotlib.pyplot as plt
+import math
+
+
+def plot_tensor_slices(
+        tensor: torch.Tensor,
+        cmap: str = 'viridis',
+        ncols: int = 4,
+        figsize: Tuple[float, float] = None
+):
+    """Plot slices of a multi-channel PyTorch tensor.
+
+    This function visualizes each channel of a 3D tensor (C, H, W) as a separate
+    subplot in a grid layout, where C is the number of channels. The channel
+    dimension is assumed to be the first dimension of the tensor.
+
+    Args:
+        tensor (torch.Tensor): A 3D tensor with shape (C, H, W). The function
+            will visualize each slice along the first dimension.
+        cmap (str, optional): The colormap to apply to each channel slice.
+            Defaults to 'viridis'.
+        ncols (int, optional): Number of columns to use for the subplot grid.
+            Defaults to 4.
+        figsize (tuple, optional): Tuple specifying the figure size in inches,
+            e.g., (10, 10). If None, it will be inferred from `ncols`.
+
+    Returns:
+        tuple:
+            - fig (matplotlib.figure.Figure): The figure object for further
+                customization or saving.
+            - axs (numpy.ndarray of matplotlib.axes.Axes): Array of subplot axes.
+    """
+    # Prepare tensor
+    tensor = tensor.detach().cpu()
+    if tensor.dim() < 3:
+        raise ValueError("Input tensor must have at least 3 dimensions (C, H, W).")
+
+    C = tensor.shape[0]
+
+    # Compute rows and columns
+    nrows = math.ceil(C / ncols)
+    if figsize is None:
+        figsize = (ncols * 3.2, nrows * 3)
+
+    fig, axs = plt.subplots(nrows, ncols, figsize=figsize, squeeze=False)
+    axs = axs.ravel()
+
+    for i in range(C):
+        img = tensor[i]
+        if img.dim() > 2:  # If extra dims exist, take the first 2D slice
+            img = img[..., 0]
+
+        m = axs[i].pcolormesh(img, cmap=cmap)
+        axs[i].set_title(f"Channel {i}")
+        plt.colorbar(m)
+
+    # Turn off any unused axes if C < nrows * ncols
+    for j in range(C, len(axs)):
+        axs[j].axis('off')
+
+    plt.tight_layout()
+    plt.show()
+    return fig, axs
