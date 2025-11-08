@@ -10,6 +10,7 @@ from .rt3d_dataset import (
     RT3DDataset,
     RT3DLogDataset,
     RT3DSplitBandDataset,
+    RT3DSplitBandWithPressureDataset,
     create_rt3d_dataloaders
 )
 
