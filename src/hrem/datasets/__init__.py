@@ -584,10 +584,11 @@ class HREMDataset3(Dataset):
 
     def _get_sample(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """Get a single heating rate sample from the dataset."""
-        inputs_dr = np.array(self.cnn_input[idx])[..., 4:15].sum(-1)[..., None]
-        inputs_god = np.array(self.cnn_input[idx])[..., 15:30]
-        inputs_aod = np.array(self.cnn_input[idx])[..., [30]]
-        inputs_cloud = np.array(self.cnn_input[idx])[..., 31:33]
+        inputs = np.array(self.cnn_input[idx])
+        inputs_dr = inputs[..., 4:15].sum(-1)[..., None]
+        inputs_god = inputs[..., 15:30]
+        inputs_aod = inputs[..., [30]]
+        inputs_cloud = inputs[..., 31:33]
         inputs = np.concatenate([inputs_dr, inputs_god, inputs_aod, inputs_cloud], axis=-1)
         target = np.array(self.cnn_output[idx])
         inputs = np.transpose(inputs, (3, 0, 1, 2))
