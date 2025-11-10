@@ -346,6 +346,21 @@ class RT3DSplitBandWithPressureDataset(Dataset):
 
         return inputs, target
 
+    def get_cloud_mask(self, idx: int) -> np.ndarray:
+        ind = 0
+        file_ind = 0
+        while True:
+            inputs = self.cnn_inputs[ind]
+            outputs = self.cnn_outputs[ind]
+            if idx < inputs.shape[0]:
+                break
+            else:
+                file_ind += 1
+                idx -= inputs.shape[0]
+
+        return (1e-10 < np.array(inputs[idx, ..., -1]))
+
+
     def __len__(self) -> int:
         """Return the length of the dataset."""
         return sum([inpt.shape[0] for inpt in self.cnn_inputs])
@@ -474,7 +489,7 @@ class HREMDataset2(Dataset):
 
     def _get_sample(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """Get a single heating rate sample from the dataset."""
-        inputs = np.array(self.cnn_input[idx])[..., [4, 5, 6 ,7, 8, 9, 10, 11, 12, 13, 14, 18, 16, 17]]
+        inputs = np.array(self.cnn_input[idx])[..., [4, 5, 6 ,7, 8, 9, 10, 11, 12, 13, 14, 18, 15, 16]]
         target = np.array(self.cnn_output[idx])
         inputs = np.transpose(inputs, (3, 0, 1, 2))
         target = np.transpose(target, (3, 0, 1, 2))
@@ -667,10 +682,11 @@ class HREMDataset4(Dataset):
 
     def _get_sample(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """Get a single heating rate sample from the dataset."""
-        inputs_dr = np.array(self.cnn_input[idx])[..., 4:15]
-        inputs_god = np.array(self.cnn_input[idx])[..., 15:30]
-        inputs_aod = np.array(self.cnn_input[idx])[..., [30]]
-        inputs_cloud = np.array(self.cnn_input[idx])[..., 31:33]
+        inputs = np.array(self.cnn_input[idx])
+        inputs_dr = inputs[..., 4:15]
+        inputs_god = inputs[idx, ..., 15:30]
+        inputs_aod = inputs[..., [30]]
+        inputs_cloud = inputs[..., 31:33]
         inputs = np.concatenate([inputs_dr, inputs_god, inputs_aod, inputs_cloud], axis=-1)
         target = np.array(self.cnn_output[idx])
         inputs = np.transpose(inputs, (3, 0, 1, 2))
@@ -847,36 +863,3 @@ class HREMDataset5(Dataset):
             target = torch.flip(target, (-3,))
 
         return inputs, target
-
-    def get_normalization_params(self) -> Dict:
-        """Get normalization parameters for denormalization."""
-        if not hasattr(self, 'norm_params'):
-            return {}
-        return self.norm_params.copy()
-
-    def denormalize_prediction(self, prediction: torch.Tensor) -> torch.Tensor:
-        """Denormalize model predictions back to original scale."""
-        # Note: This is a placeholder - actual denormalization would depend on
-        # how the target variables were normalized in the original LASSO data
-        warnings.warn("Denormalization not implemented - returning prediction as-is")
-        return prediction
-
-    def get_sample_metadata(self, idx: int) -> Dict:
-        """Get metadata for a specific sample."""
-        sample_inputs, sample_target = self._get_sample(idx)
-
-        metadata = {
-            'index': idx,
-            'zarr_file': self.zarr_file_path,
-            'input_shape': sample_inputs.shape,
-            'target_shape': sample_target.shape,
-            'input_channels': self.input_channels,
-            'target_channels': self.output_channels,
-            'spatial_dimensions': {
-                'height': 250,  # Vertical cross-section height
-                'width': 11,    # Cross-section width (crop_width)
-                'depth': 150    # Vertical levels
-            }
-        }
-
-        return metadata
