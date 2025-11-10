@@ -1,0 +1,94 @@
+# ----------------------------
+# sci_manuscript.mplstyle
+# A compact, journal-friendly Matplotlib style
+# Palette: Okabe–Ito (colorblind-safe)
+# ----------------------------
+
+##### Figure / Save #####
+figure.dpi           : 120
+savefig.dpi          : 300
+savefig.bbox         : tight
+savefig.pad_inches   : 0.02
+savefig.transparent  : True
+
+##### Font / Text #####
+font.family          : sans-serif
+font.sans-serif      : Noto Sans, DejaVu Sans, Arial, Helvetica
+font.size            : 9
+axes.titlesize       : 10
+axes.titleweight     : semibold
+axes.labelsize       : 9
+axes.labelpad        : 2.5
+legend.fontsize      : 8
+mathtext.fontset     : stix
+axes.formatter.use_mathtext : True
+axes.formatter.limits: -3, 4   # switch to scientific notation outside these exponents
+pdf.fonttype         : 42
+ps.fonttype          : 42
+
+##### Lines / Markers #####
+lines.linewidth      : 1.6
+lines.markersize     : 4
+lines.solid_capstyle : round
+lines.solid_joinstyle: round
+
+##### Axes / Spines / Grid #####
+axes.linewidth       : 0.8
+axes.grid            : True
+axes.grid.which      : major
+grid.linewidth       : 0.6
+grid.alpha           : 0.25
+grid.linestyle       : -
+axes.axisbelow       : True
+axes.spines.top      : False
+axes.spines.right    : False
+
+##### Ticks #####
+xtick.direction      : in
+ytick.direction      : in
+xtick.major.size     : 4
+ytick.major.size     : 4
+xtick.minor.size     : 2
+ytick.minor.size     : 2
+xtick.major.width    : 0.8
+ytick.major.width    : 0.8
+xtick.minor.width    : 0.6
+ytick.minor.width    : 0.6
+xtick.minor.visible  : True
+ytick.minor.visible  : True
+xtick.labelsize      : 8
+ytick.labelsize      : 8
+
+##### Legend #####
+legend.frameon       : False
+legend.handlelength  : 1.6
+legend.handletextpad : 0.5
+legend.borderaxespad : 0.6
+legend.borderpad     : 0.3
+legend.labelspacing  : 0.25
+legend.columnspacing : 0.8
+
+##### Errorbars / Patch / Box #####
+errorbar.capsize     : 2.0
+patch.linewidth      : 0.8
+boxplot.whiskerprops.linewidth : 0.8
+boxplot.boxprops.linewidth     : 0.8
+boxplot.capprops.linewidth     : 0.8
+boxplot.medianprops.linewidth  : 1.2
+
+##### Images / Colormaps #####
+image.cmap           : viridis          # perceptually uniform, colorblind-friendly
+image.interpolation  : none
+
+##### Color cycle (Okabe–Ito) #####
+# Black, Orange, Sky Blue, Bluish Green, Yellow, Blue, Vermillion, Reddish Purple
+axes.prop_cycle      : cycler('color', ['#000000', '#E69F00', '#56B4E9', '#009E73', '#F0E442', '#0072B2', '#D55E00', '#CC79A7'])
+
+##### Lines styles cycle (optional, pairs with color cycle) #####
+# Comment out the next line if you prefer all-solid lines.
+# Note: This effectively cycles through combinations of colors and linestyles.
+#axes.prop_cycle     : (cycler('color', ['#000000', '#E69F00', '#56B4E9', '#009E73', '#F0E442', '#0072B2', '#D55E00', '#CC79A7'])
+#                       + cycler('linestyle', ['-', '--', '-.', ':', '-', '--', '-.', ':']))
+
+##### Misc #####
+figure.autolayout    : False  # we rely on tight bbox in savefig

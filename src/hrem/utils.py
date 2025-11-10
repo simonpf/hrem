@@ -1,6 +1,7 @@
 """
 Helper functions for evaluting radiative transfer emulators.
 """
+import math
 from typing import List, Tuple
 
 import matplotlib.pyplot as plt
@@ -69,26 +70,19 @@ def evaluate_scene(
         A numpy array containing the predicted fluxes.
     """
     start_ind = 192 * scene
-    end_ind = start_ind + 192
+    end_ind = start_ind + 1#192
     hr_pred = []
     hr_true = []
-    cod = []
-    lwp = []
-    god = []
+    cloud_mask = []
 
     for ind in range(start_ind, end_ind):
         inpt, ref = data_loader[ind]
         pred = simulate_fluxes(model, inpt, device=device, dtype=dtype)
-        inpt = inpt[None]
-
-        cod.append(inpt[0, -4, :, 5].float().numpy())
-        lwp.append(inpt[0, -3, :, 5].float().numpy())
-        god.append(inpt[0, -1, :, 5].float().numpy())
-
+        cloud_mask.append(data_loader.get_cloud_mask(ind)[:, 5])
         hr_pred.append(flux_to_hr(pred.squeeze()[:, 5]))
         hr_true.append(flux_to_hr(ref[0, :, 5]))
 
-    return np.stack(cod), np.stack(lwp), np.stack(god), np.stack(hr_pred), np.stack(hr_true)
+    return np.stack(hr_pred), np.stack(hr_true), np.stack(cloud_mask)
 
 
 def plot_stats_and_hist(
@@ -168,9 +162,6 @@ def plot_stats_and_hist(
 
     plt.tight_layout()
     return fig
-import torch
-import matplotlib.pyplot as plt
-import math
 
 
 def plot_tensor_slices(
