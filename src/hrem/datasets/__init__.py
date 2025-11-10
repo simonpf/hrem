@@ -804,6 +804,7 @@ class HREMDataset5(Dataset):
         ind = 0
         file_ind = 0
         while True:
+            print(ind)
             inputs = self.cnn_inputs[ind]
             outputs = self.cnn_outputs[ind]
             if idx < inputs.shape[0]:
@@ -812,14 +813,20 @@ class HREMDataset5(Dataset):
                 file_ind += 1
                 idx -= inputs.shape[0]
 
-        inputs_dr = np.array(self.cnn_input[idx])[..., 4:15]
-        inputs_god = np.array(self.cnn_input[idx])[..., 15:30]
-        inputs_aod = np.array(self.cnn_input[idx])[..., [30]]
-        inputs_cloud = np.array(self.cnn_input[idx])[..., 31:33]
+        inputs = inputs[idx]
+        inputs_dr = inputs[..., 4:15]
+        inputs_god = inputs[..., 15:30]
+        inputs_aod = inputs[..., [30]]
+        inputs_cloud = inputs[..., 31:33]
+        inputs = np.concatenate([inputs_dr, inputs_god, inputs_aod, inputs_cloud], axis=-1)
+
+        inputs = np.transpose(inputs, (3, 0, 1, 2))
+        target = np.array(outputs[idx])
+        target = np.transpose(target, (3, 0, 1, 2))
+
         profiles = torch.from_numpy(self.get_profiles(file_ind, idx)).float()[..., None, None, :]
         profiles = torch.broadcast_to(profiles, (4,) + inputs.shape[1:])
-        inputs = np.concatenate([inputs_dr, inputs_god, inputs_aod, inputs_cloud, profiles], axis=-1)
-        target = np.array(outputs[idx])
+        inputs = np.concatenate([inputs, profiles], axis=0)
 
         # Convert to tensors
         inputs = torch.from_numpy(inputs).float()
@@ -845,16 +852,6 @@ class HREMDataset5(Dataset):
 
         inputs, target = self._get_sample(idx)
 
-
-        for ind in range(4, 15):
-            inputs[ind] = torch.maximum(np.log10(inputs[ind]), torch.tensor(-7.0))
-        inputs[30] = inputs[30]
-        inputs[31] = torch.maximum(np.log10(inputs[31]), torch.tensor(-5.0))
-        inputs[32] = torch.maximum(np.log10(inputs[32]), torch.tensor(-7.0))
-        inputs[33] = torch.maximum(np.log10(inputs[33]), torch.tensor(-3.0))
-        inputs[36] = torch.maximum(np.log10(inputs[36]), torch.tensor(-7.0))
-        inputs[37] = 1e8 * inputs[37]
-
         if (not self.validation)  and 0.5  < self.rng.random():
             inputs = torch.flip(inputs, (-2,))
             target = torch.flip(target, (-2,))
@@ -862,5 +859,13 @@ class HREMDataset5(Dataset):
         if (not self.validation) and 0.5  < self.rng.random():
             inputs = torch.flip(inputs, (-3,))
             target = torch.flip(target, (-3,))
+
+        # Transform input values
+        inputs[:11] = torch.log10(inputs[:11])
+        inputs[27] = torch.log10(torch.maximum(inputs[27], torch.tensor(1e-5)))
+        inputs[28] = inputs[28]
+
+        inputs[31] = torch.maximum(np.log10(inputs[31]), torch.tensor(-7.0))
+        inputs[32] = 1e8 * inputs[32]
 
         return inputs, target
