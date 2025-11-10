@@ -684,7 +684,7 @@ class HREMDataset4(Dataset):
         """Get a single heating rate sample from the dataset."""
         inputs = np.array(self.cnn_input[idx])
         inputs_dr = inputs[..., 4:15]
-        inputs_god = inputs[idx, ..., 15:30]
+        inputs_god = inputs[..., 15:30]
         inputs_aod = inputs[..., [30]]
         inputs_cloud = inputs[..., 31:33]
         inputs = np.concatenate([inputs_dr, inputs_god, inputs_aod, inputs_cloud], axis=-1)
