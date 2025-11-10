@@ -804,7 +804,6 @@ class HREMDataset5(Dataset):
         ind = 0
         file_ind = 0
         while True:
-            print(ind)
             inputs = self.cnn_inputs[ind]
             outputs = self.cnn_outputs[ind]
             if idx < inputs.shape[0]:
