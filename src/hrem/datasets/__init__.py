@@ -812,7 +812,7 @@ class HREMDataset5(Dataset):
                 file_ind += 1
                 idx -= inputs.shape[0]
 
-        inputs = inputs[idx]
+        inputs = np.array(inputs[idx])
         inputs_dr = inputs[..., 4:15]
         inputs_god = inputs[..., 15:30]
         inputs_aod = inputs[..., [30]]
