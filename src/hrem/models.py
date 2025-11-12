@@ -343,58 +343,44 @@ class HeatingRateUNet3dSimple(nn.Module):
         self.input_channels = input_channels
         self.output_channels = output_channels
         self.filters = filters
-        self.leaky_slope = leaky_slope
+        self.act = nn.LeakyReLU(negative_slope=leaky_slope, inplace=False)
 
         # Encoder (downsampling path)
-        self.enc_conv1_1 = nn.Conv3d(input_channels, filters, 3, padding=1)
-        self.enc_norm1_1 = LayerNorm3d(filters)
+        #
+        self.enc_conv1_1 = nn.Sequential(
+            StandardizationLayer("forcing", input_channels),
+            nn.Conv3d(input_channels, filters, 3, padding=1)
+        )
         self.enc_conv1_2 = nn.Conv3d(filters, filters, 3, padding=1)
-        self.enc_norm1_2 = LayerNorm3d(filters)
         self.enc_conv1_3 = nn.Conv3d(filters, filters, 3, padding=1)
-        self.enc_norm1_3 = LayerNorm3d(filters)
         self.pool1 = nn.MaxPool3d(kernel_size=(5, 1, 5), stride=(5, 1, 5))
         
         self.enc_conv2_1 = nn.Conv3d(filters, filters, 3, padding=1)
-        self.enc_norm2_1 = LayerNorm3d(filters)
         self.enc_conv2_2 = nn.Conv3d(filters, filters, 3, padding=1)
-        self.enc_norm2_2 = LayerNorm3d(filters)
         self.enc_conv2_3 = nn.Conv3d(filters, filters, 3, padding=1)
-        self.enc_norm2_3 = LayerNorm3d(filters)
         self.pool2 = nn.MaxPool3d(kernel_size=(5, 1, 3), stride=(5, 1, 3))
         
         self.enc_conv3_1 = nn.Conv3d(filters, filters, 3, padding=1)
-        self.enc_norm3_1 = LayerNorm3d(filters)
         self.enc_conv3_2 = nn.Conv3d(filters, filters, 3, padding=1)
-        self.enc_norm3_2 = LayerNorm3d(filters)
         self.enc_conv3_3 = nn.Conv3d(filters, filters, 3, padding=1)
-        self.enc_norm3_3 = LayerNorm3d(filters)
         self.pool3 = nn.MaxPool3d(kernel_size=(2, 1, 2), stride=(2, 1, 2))
         
         # Decoder (upsampling path)
         self.up3 = nn.Upsample(scale_factor=(2, 1, 2), mode='nearest')
         self.dec_conv3_1 = nn.Conv3d(filters * 2, filters, 3, padding=1)
-        self.dec_norm3_1 = LayerNorm3d(filters)
         self.dec_conv3_2 = nn.Conv3d(filters, filters, 3, padding=1)
-        self.dec_norm3_2 = LayerNorm3d(filters)
         self.dec_conv3_3 = nn.Conv3d(filters, filters, 3, padding=1)
-        self.dec_norm3_3 = LayerNorm3d(filters)
-        
+
         self.up2 = nn.Upsample(scale_factor=(5, 1, 3), mode='nearest')
         self.dec_conv2_1 = nn.Conv3d(filters * 2, filters, 3, padding=1)
-        self.dec_norm2_1 = LayerNorm3d(filters)
         self.dec_conv2_2 = nn.Conv3d(filters, filters, 3, padding=1)
-        self.dec_norm2_2 = LayerNorm3d(filters)
         self.dec_conv2_3 = nn.Conv3d(filters, filters, 3, padding=1)
-        self.dec_norm2_3 = LayerNorm3d(filters)
-        
+
         self.up1 = nn.Upsample(scale_factor=(5, 1, 5), mode='nearest')
         self.dec_conv1_1 = nn.Conv3d(filters * 2, filters, 3, padding=1)
-        self.dec_norm1_1 = LayerNorm3d(filters)
         self.dec_conv1_2 = nn.Conv3d(filters, filters, 3, padding=1)
-        self.dec_norm1_2 = LayerNorm3d(filters)
         self.dec_conv1_3 = nn.Conv3d(filters, filters, 3, padding=1)
-        self.dec_norm1_3 = LayerNorm3d(filters)
-        
+
         # Final output layer
         self.final_conv = nn.Conv3d(filters, output_channels, 3, padding=1)
         
@@ -414,21 +400,21 @@ class HeatingRateUNet3dSimple(nn.Module):
         """
         # Encoder path
         # Level 1
-        x1 = F.gelu(self.enc_norm1_1(self.enc_conv1_1(x)))
-        x1 = x1 + F.gelu(self.enc_norm1_2(self.enc_conv1_2(x1)))
-        x1 = x1 + F.gelu(self.enc_norm1_2(self.enc_conv1_3(x1)))
+        x1 = self.act(self.enc_conv1_1(x))
+        x1 = x1 + self.act(self.enc_conv1_2(x1))
+        x1 = x1 + self.act(self.enc_conv1_3(x1))
         p1 = self.pool1(x1)
         
         # Level 2
-        x2 = F.gelu(self.enc_norm2_1(self.enc_conv2_1(p1)))
-        x2 = x2 + F.gelu(self.enc_norm2_2(self.enc_conv2_2(x2)))
-        x2 = x2 + F.gelu(self.enc_norm2_3(self.enc_conv2_3(x2)))
+        x2 = self.act(self.enc_conv2_1(p1))
+        x2 = x2 + self.act(self.enc_conv2_2(x2))
+        x2 = x2 + self.act(self.enc_conv2_3(x2))
         p2 = self.pool2(x2)
         
         # Level 3
-        x3 = F.gelu(self.enc_norm3_1(self.enc_conv3_1(p2)))
-        x3 = x3 + F.gelu(self.enc_norm3_2(self.enc_conv3_2(x3)))
-        x3 = x3 + F.gelu(self.enc_norm3_3(self.enc_conv3_3(x3)))
+        x3 = self.act(self.enc_conv3_1(p2))
+        x3 = x3 + self.act(self.enc_conv3_2(x3))
+        x3 = x3 + self.act(self.enc_conv3_3(x3))
         p3 = self.pool3(x3)
         
         # Decoder path
@@ -437,27 +423,27 @@ class HeatingRateUNet3dSimple(nn.Module):
         if u3.shape[2:] != x3.shape[2:]:
             u3 = F.interpolate(u3, size=x3.shape[2:], mode='nearest')
         u3 = torch.cat([u3, x3], dim=1)
-        u3 = F.gelu(self.dec_norm3_1(self.dec_conv3_1(u3)))
-        u3 = u3 + F.gelu(self.dec_norm3_2(self.dec_conv3_2(u3)))
-        u3 = u3 + F.gelu(self.dec_norm3_3(self.dec_conv3_3(u3)))
+        u3 = self.act(self.dec_conv3_1(u3))
+        u3 = u3 + self.act(self.dec_conv3_2(u3))
+        u3 = u3 + self.act(self.dec_conv3_3(u3))
         
         # Level 2
         u2 = self.up2(u3)
         if u2.shape[2:] != x2.shape[2:]:
             u2 = F.interpolate(u2, size=x2.shape[2:], mode='nearest')
         u2 = torch.cat([u2, x2], dim=1)
-        u2 = F.gelu(self.dec_norm2_1(self.dec_conv2_1(u2)))
-        u2 = u2 + F.gelu(self.dec_norm2_2(self.dec_conv2_2(u2)))
-        u2 = u2 + F.gelu(self.dec_norm2_3(self.dec_conv2_3(u2)))
+        u2 = self.act(self.dec_conv2_1(u2))
+        u2 = u2 + self.act(self.dec_conv2_2(u2))
+        u2 = u2 + self.act(self.dec_conv2_3(u2))
         
         # Level 1
         u1 = self.up1(u2)
         if u1.shape[2:] != x1.shape[2:]:
             u1 = F.interpolate(u1, size=x1.shape[2:], mode='nearest')
         u1 = torch.cat([u1, x1], dim=1)
-        u1 = F.gelu(self.dec_norm1_1(self.dec_conv1_1(u1)))
-        u1 = u1 + F.gelu(self.dec_norm1_2(self.dec_conv1_2(u1)))
-        u1 = u1 + F.gelu(self.dec_norm1_3(self.dec_conv1_3(u1)))
+        u1 = self.act(self.dec_conv1_1(u1))
+        u1 = u1 + self.act(self.dec_conv1_2(u1))
+        u1 = u1 + self.act(self.dec_conv1_3(u1))
         
         # Final output
         output = self.final_conv(u1)
