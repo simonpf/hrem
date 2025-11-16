@@ -754,10 +754,10 @@ class HREMDataset5(Dataset):
             target_transform: Optional transform to apply to targets
             cache_in_memory: Whether to cache data in memory for faster access
         """
-        if isinstance(zarr_file_paths, str):
+        if isinstance(zarr_file_paths, (str, Path)):
             zarr_file_paths = [zarr_file_paths]
         self.zarr_file_paths = [Path(path) for path in zarr_file_paths]
-        if isinstance(profile_file_paths, str):
+        if isinstance(profile_file_paths, (str, Path)):
             profile_file_paths = [profile_file_paths]
         self.profile_file_paths = profile_file_paths
         self._load_zarr_store()
