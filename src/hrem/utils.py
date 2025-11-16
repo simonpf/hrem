@@ -253,9 +253,7 @@ def run_emulator(
 
     for ind, (inpt, target) in tqdm(enumerate(data_loader), total=len(data_loader)):
         pred = simulate_fluxes(model, inpt, device=device, dtype=dtype)
-
         results.append(pred[:, 0])
         reference.append(target)
-
 
     return np.concatenate(results, 0), np.concatenate(reference, 0)
