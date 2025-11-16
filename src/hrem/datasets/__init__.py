@@ -358,7 +358,7 @@ class RT3DSplitBandWithPressureDataset(Dataset):
                 file_ind += 1
                 idx -= inputs.shape[0]
 
-        return (1e-10 < np.array(inputs[idx, ..., -1]))
+        return (1e-9 < np.array(inputs[idx, ..., -1]))
 
 
     def __len__(self) -> int:
@@ -843,6 +843,20 @@ class HREMDataset5(Dataset):
         """
         seed = int.from_bytes(os.urandom(4), "big") + w_id
         self.rng = np.random.default_rng(seed)
+
+    def get_cloud_mask(self, idx: int) -> np.ndarray:
+        ind = 0
+        file_ind = 0
+        while True:
+            inputs = self.cnn_inputs[ind]
+            outputs = self.cnn_outputs[ind]
+            if idx < inputs.shape[0]:
+                break
+            else:
+                file_ind += 1
+                idx -= inputs.shape[0]
+
+        return (1e-9 < np.array(inputs[idx, ..., -1]))
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """Get a sample from the dataset."""

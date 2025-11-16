@@ -4,11 +4,13 @@ Helper functions for evaluting radiative transfer emulators.
 import math
 from typing import List, Tuple
 
+from tqdm import tqdm
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch import nn
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 
 
 def flux_to_hr(flux: np.ndarray) -> np.ndarray:
@@ -70,17 +72,17 @@ def evaluate_scene(
         A numpy array containing the predicted fluxes.
     """
     start_ind = 192 * scene
-    end_ind = start_ind + 1#192
+    end_ind = start_ind + 192
     hr_pred = []
     hr_true = []
     cloud_mask = []
 
-    for ind in range(start_ind, end_ind):
+    for ind in range(start_ind, end_ind, 1):
         inpt, ref = data_loader[ind]
         pred = simulate_fluxes(model, inpt, device=device, dtype=dtype)
         cloud_mask.append(data_loader.get_cloud_mask(ind)[:, 5])
-        hr_pred.append(flux_to_hr(pred.squeeze()[:, 5]))
-        hr_true.append(flux_to_hr(ref[0, :, 5]))
+        hr_pred.append(pred.squeeze()[:, 5])
+        hr_true.append(ref[0, :, 5])
 
     return np.stack(hr_pred), np.stack(hr_true), np.stack(cloud_mask)
 
@@ -223,3 +225,37 @@ def plot_tensor_slices(
     plt.tight_layout()
     plt.show()
     return fig, axs
+
+
+def run_emulator(
+    model: nn.Module,
+    data_loader: Dataset,
+    device="cuda:1",
+    dtype=torch.bfloat16
+):
+    """
+    Calculate fluxes for a full scene, i.e., 192 slices and return COD, and predicted and reference
+    fluxes.
+
+    Args:
+        model: A PyTorch module implementing the emulator.
+        data_loader: A data loader returning the samples from the validation or testing datasets.
+        device: The device to run the prediction on.
+        dtype: The dtype to use for the model.
+
+    Return:
+        A numpy array containing the predicted fluxes.
+    """
+    data_loader = DataLoader(data_loader, batch_size=8, shuffle=False)
+
+    results = []
+    reference = []
+
+    for ind, (inpt, target) in tqdm(enumerate(data_loader), total=len(data_loader)):
+        pred = simulate_fluxes(model, inpt, device=device, dtype=dtype)
+
+        results.append(pred[:, 0])
+        reference.append(target)
+
+
+    return np.concatenate(results, 0), np.concatenate(reference, 0)

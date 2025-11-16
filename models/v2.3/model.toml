@@ -1,0 +1,11 @@
+name = "hrem_v2_3"
+[architecture]
+model_class = "hrem.models.HeatingRateUNet3d"
+input_channels = 19
+
+[input.forcing]
+n_features = 19
+
+[output.heating_rates]
+shape = 1
+kind = "Mean"

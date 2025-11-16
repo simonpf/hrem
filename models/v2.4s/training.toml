@@ -1,0 +1,30 @@
+[stage_1]
+n_epochs = 20
+optimizer = "AdamW"
+optimizer_args = {lr = 5e-4}
+dataset_module = "hrem.datasets"
+training_dataset = "HREMDataset4"
+training_dataset_args = {zarr_file_path="/home/simon/data/heating_rates/4Simon/HR_train_patches_split_bands_and_tau.zarr"}
+validation_dataset_args = {zarr_file_path="/home/simon/data/heating_rates/4Simon/HR_val_patches_with_split_bands_and_tau.zarr", validation=true}
+batch_size = 4
+metrics = ["Bias", "MSE", "CorrelationCoef", "PlotSamples"]
+scheduler = "CosineAnnealingLR"
+scheduler_args = {T_max=20}
+n_data_loader_workers = 12
+persistent_workers = false
+
+[stage_2]
+n_epochs = 40
+optimizer = "AdamW"
+optimizer_args = {lr = 5e-4}
+dataset_module = "hrem.datasets"
+training_dataset = "HREMDataset4"
+training_dataset_args = {zarr_file_path="/home/simon/data/heating_rates/4Simon/HR_train_patches_split_bands_and_tau.zarr"}
+validation_dataset_args = {zarr_file_path="/home/simon/data/heating_rates/4Simon/HR_val_patches_with_split_bands_and_tau.zarr", validation=true}
+batch_size = 4
+metrics = ["Bias", "MSE", "CorrelationCoef", "PlotSamples"]
+scheduler = "CosineAnnealingLR"
+scheduler_args = {T_max=40}
+n_data_loader_workers = 12
+persistent_workers = false
+
